@@ -6,10 +6,13 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.hacked.controller.Broadcaster;
 import com.hacked.controller.HackedService;
+import com.hacked.controller.HackedSessionService;
+import com.hacked.controller.Broadcaster.BroadcastListener;
 import com.hacked.entity.Player;
 import com.hacked.entity.Role;
-import com.hacked.service.HackedSessionService;
+import com.vaadin.annotations.Push;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.Page;
@@ -18,15 +21,18 @@ import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 /**
  * @author pd06286
  */
 @SpringView(name = RundeView.VIEW_NAME)
-public class RundeView extends VerticalLayout implements View {
+@Push
+public class RundeView extends VerticalLayout implements View, BroadcastListener {
 	/**
 	 *
 	 */
@@ -34,74 +40,78 @@ public class RundeView extends VerticalLayout implements View {
 
 	public static final String VIEW_NAME = "runde";
 
+	private String gameId;
+
 	@Autowired
 	private HackedService hackedService;
 
+	private Button scannenButton;
+
+	private Button hackButton;
+
+	private Button wahlButton;
+
+	private Grid<Player> myGrid;
+
+	private Player player;
+
 	@PostConstruct
 	void init() {
-		long playerId = HackedSessionService.getPlayerId();
-		Player player = hackedService.getPlayer(playerId);
-		String gameId = HackedSessionService.getGameId();
-		Grid<Player> myGrid = generateSpielerTabelle();
+		player = hackedService.getPlayer(HackedSessionService.getPlayerId());
+		gameId = HackedSessionService.getGameId();
+		myGrid = generateSpielerTabelle();
 
-		Button wahlButton = new Button("Wählen");
+		wahlButton = new Button("Wählen");
 		wahlButton.addClickListener(e -> {
-			Player votedPlayer = (Player) myGrid.getSelectedItems().toArray()[0];
-			hackedService.voteForPlayer(playerId, votedPlayer.getId(), gameId);
-			System.out.println(player.getName() + " -> Wurde gewählt");
-			wahlButton.setEnabled(false);
-		});
-
-		Button hackButton = new Button("Hacken");
-		hackButton.setVisible(Role.HACKER == player.getRole());
-		hackButton.addClickListener(e -> {
-			Player hackedPlayer = (Player) myGrid.getSelectedItems().toArray()[0];
-			hackedService.hackPlayer(hackedPlayer.getId());
-			System.out.println(player.getName() + " -> Wurde gehackt");
-			hackButton.setEnabled(false);
-		});
-
-		Button scannenButton = new Button("Scannen");
-		scannenButton.setVisible(Role.ADMIN == player.getRole());
-		scannenButton.addClickListener(e -> {
-			Player scannedPlayer = (Player) myGrid.getSelectedItems().toArray()[0];
-			generateScanMeldung(scannedPlayer);
-			System.out.println(player.getName() + " -> Wurde gescannt");
-			scannenButton.setEnabled(false);
-		});
-
-		Button aktualisieren = new Button("Aktualisieren");
-		aktualisieren.addClickListener(e -> {
-			if (isRundeEnde(gameId)) {
-				scannenButton.setEnabled(true);
-				hackButton.setEnabled(true);
-				wahlButton.setEnabled(true);
-				Player votedPlayer = hackedService.getPlayerOfVot(gameId);
-				Player hackedPlayer = hackedService.getHackedPlayer();
-				if (hackedPlayer != null) {
-					hackedService.deaktivatePlayer(hackedPlayer.getId());
-					System.out.println("Spieler " + hackedPlayer.getName() + " Wurde gehackt");
-				}
-				if (votedPlayer != null) {
-					hackedService.deaktivatePlayer(votedPlayer.getId());
-					System.out.println("Spieler " + votedPlayer.getName() + " Wurde rausgewaehlt");
-				}
-				generateRundeEndeMeldung(gameId, votedPlayer, hackedPlayer);
-				HackedSessionService.setRound(null);
-				hackedService.deleteVotes(gameId);
-				myGrid.setItems(getPlayer());
-				if (isSpielEnde()) {
-					generateSpielEndeMeldung();
-				}
+			Player votedPlayer = getSelectedPlayer();
+			if (votedPlayer != null) {
+				hackedService.voteForPlayer(player.getId(), votedPlayer.getId(), gameId);
+				System.out.println(player.getName() + " -> Wurde gewählt");
+				wahlButton.setEnabled(false);
+				myGrid.deselectAll();
+				Broadcaster.broadcast(gameId, player.getName() + " hat gewählt");
 			}
 		});
 
-		addComponents(new Label("Spieler: " + player.getName()), myGrid, wahlButton, aktualisieren, hackButton,
-				scannenButton);
+		hackButton = new Button("Hacken");
+		hackButton.setVisible(Role.HACKER == player.getRole());
+		hackButton.addClickListener(e -> {
+			Player hackedPlayer = getSelectedPlayer();
+			if (hackedPlayer != null) {
+				hackedService.hackPlayer(hackedPlayer.getId());
+				System.out.println(player.getName() + " -> Wurde gehackt");
+				hackButton.setEnabled(false);
+				myGrid.deselectAll();
+			}
+		});
+
+		scannenButton = new Button("Scannen");
+		scannenButton.setVisible(Role.ADMIN == player.getRole());
+		scannenButton.addClickListener(e -> {
+			Player scannedPlayer = getSelectedPlayer();
+			if (scannedPlayer != null) {
+				generateScanMeldung(scannedPlayer);
+				System.out.println(player.getName() + " -> Wurde gescannt");
+				scannenButton.setEnabled(false);
+				myGrid.deselectAll();
+			}
+		});
+
+		addComponents(new Label("Spieler: " + player.getName()), myGrid, wahlButton, hackButton, scannenButton);
+		Broadcaster.register(gameId, this);
+	}
+
+	private Player getSelectedPlayer() {
+		Object[] array = myGrid.getSelectedItems().toArray();
+		if (array.length > 0) {
+			Player hackedPlayer = (Player) array[0];
+			return hackedPlayer;
+		}
+		return null;
 	}
 
 	private void generateSpielEndeMeldung() {
-		String meldungsText = "DAS Spiel ist zu Ende!";
+		String meldungsText = "Das Spiel ist zu Ende!";
 		Notification scanNotif = new Notification("Was bisher geschah!");
 		scanNotif.setDescription(meldungsText);
 		scanNotif.setHtmlContentAllowed(true);
@@ -115,14 +125,13 @@ public class RundeView extends VerticalLayout implements View {
 	}
 
 	private void generateRundeEndeMeldung(String gameId, Player votedPlayer, Player hackedPlayer) {
-		String meldungsText = votedPlayer.getName() + " wurde rausgewaehlt!" + "\n" + hackedPlayer.getName()
-				+ " wurde gehackt!";
-		Notification scanNotif = new Notification("Was bisher geschah!");
-		scanNotif.setDescription(meldungsText);
-		scanNotif.setHtmlContentAllowed(true);
-		scanNotif.setPosition(Position.TOP_LEFT);
-		scanNotif.setDelayMsec(2000);
-		scanNotif.show(Page.getCurrent());
+		String hackedMeldungsText = "";
+		if (hackedPlayer != null) {
+			hackedMeldungsText = "\n" + hackedPlayer.getName() + " wurde gehackt!";
+		}
+
+		String meldungsText = votedPlayer.getName() + " wurde rausgewaehlt!" + hackedMeldungsText;
+		hackedService.generateMeldung("Was bisher geschah!", meldungsText).show(Page.getCurrent());
 	}
 
 	private Grid<Player> generateSpielerTabelle() {
@@ -140,17 +149,59 @@ public class RundeView extends VerticalLayout implements View {
 	}
 
 	private void generateScanMeldung(Player player) {
-		Notification scanNotif = new Notification(player.getName());
-		scanNotif.setDescription("" + player.getRole().name());
-		scanNotif.setHtmlContentAllowed(true);
-		scanNotif.setPosition(Position.TOP_LEFT);
-		scanNotif.setDelayMsec(2000);
-		scanNotif.show(Page.getCurrent());
+		hackedService.generateMeldung(player.getName(), player.getRole().getIcon().getHtml()).show(Page.getCurrent());
 	}
 
 	private List<Player> getPlayer() {
 		String gameId = HackedSessionService.getGameId();
 		return hackedService.getAktivPlayerOfGame(gameId);
+	}
+
+	@Override
+	public void detach() {
+		Broadcaster.unregister(gameId, this);
+		super.detach();
+	}
+
+	@Override
+	public void receiveBroadcast(String message) {
+		getUI().access(() -> {
+			hackedService.generateMeldung("", message).show(Page.getCurrent());
+			if (isRundeEnde(gameId)) {
+				scannenButton.setEnabled(true);
+				hackButton.setEnabled(true);
+				wahlButton.setEnabled(true);
+				Player votedPlayer = hackedService.getPlayerOfVot(gameId);
+				Player hackedPlayer = hackedService.getHackedPlayer();
+				if (hackedPlayer != null) {
+					hackedService.deaktivatePlayer(hackedPlayer.getId());
+					if (hackedPlayer.getId() == player.getId()) {
+						hackedService.generateMeldung("", "Du Wurdes gehackt!").show(Page.getCurrent());
+						UI.getCurrent().getNavigator().navigateTo(EndeView.VIEW_NAME);
+					}
+				}
+				if (votedPlayer != null) {
+					hackedService.deaktivatePlayer(votedPlayer.getId());
+					if (votedPlayer.getId() == player.getId()) {
+						hackedService.generateMeldung("", "Du Wurdes rausgewählt!").show(Page.getCurrent());
+						UI.getCurrent().getNavigator().navigateTo(EndeView.VIEW_NAME);
+					}
+				}
+				generateRundeEndeMeldung(gameId, votedPlayer, hackedPlayer);
+				HackedSessionService.setRound(null);
+				hackedService.deleteVotes(gameId);
+				myGrid.setItems(getPlayer());
+				if (isSpielEnde()) {
+					generateSpielEndeMeldung();
+					HackedSessionService.setWinner(ermittleGewinner());
+					UI.getCurrent().getNavigator().navigateTo(EndeView.VIEW_NAME);
+				}
+			}
+		});
+	}
+
+	private Role ermittleGewinner() {
+		return Role.USER;
 	}
 
 	/*

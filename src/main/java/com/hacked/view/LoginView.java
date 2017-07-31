@@ -4,10 +4,11 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.hacked.controller.Broadcaster;
 import com.hacked.controller.HackedService;
+import com.hacked.controller.HackedSessionService;
+import com.hacked.controller.SessionKonstanten;
 import com.hacked.entity.Player;
-import com.hacked.service.HackedSessionService;
-import com.hacked.service.SessionKonstanten;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.spring.annotation.SpringView;
@@ -36,10 +37,9 @@ public class LoginView extends VerticalLayout implements View {
 
 	@PostConstruct
 	void init() {
-		
-	
+
 		String gameIdText = (String) UI.getCurrent().getSession().getAttribute(SessionKonstanten.GAME_ID);
-		TextField textFieldgameId = new TextField("Game-ID");
+		TextField textFieldgameId = new TextField("Spiel-ID");
 		textFieldgameId.setValue(gameIdText);
 		TextField textFieldplayerName = new TextField("Spielername");
 		Button buttonAnmelden = new Button("Anmelden");
@@ -59,7 +59,8 @@ public class LoginView extends VerticalLayout implements View {
 		Player player = hackedService.getPlayer(id);
 		HackedSessionService.setGameId(gameId);
 		HackedSessionService.setPlayerId(player.getId());
-		HackedSessionService.setPlayer(player);		
+		HackedSessionService.setPlayer(player);
+		Broadcaster.broadcast(gameId, "Spieler " + playerName + " tritt dem Spiel bei.");
 		getUI().getNavigator().navigateTo(LobbyView.VIEW_NAME);
 	}
 

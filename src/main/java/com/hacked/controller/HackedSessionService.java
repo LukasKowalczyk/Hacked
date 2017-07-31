@@ -1,11 +1,15 @@
-package com.hacked.service;
+package com.hacked.controller;
 
 import com.hacked.entity.Game;
 import com.hacked.entity.Player;
+import com.hacked.entity.Role;
 import com.hacked.entity.Round;
 import com.vaadin.ui.UI;
 
 public class HackedSessionService {
+	public static Role getWinner() {
+		return (Role) UI.getCurrent().getSession().getAttribute(SessionKonstanten.WINNER);
+	}
 
 	public static Player getPlayer() {
 		return (Player) UI.getCurrent().getSession().getAttribute(SessionKonstanten.PLAYER);
@@ -45,6 +49,10 @@ public class HackedSessionService {
 
 	public static void setRound(Round runde) {
 		UI.getCurrent().getSession().setAttribute(SessionKonstanten.ROUND, runde);
+	}
+
+	public static void setWinner(Role winner) {
+		UI.getCurrent().getSession().setAttribute(SessionKonstanten.WINNER, winner);
 	}
 
 }

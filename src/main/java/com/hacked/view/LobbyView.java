@@ -4,22 +4,22 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.hacked.controller.Broadcaster;
+import com.hacked.controller.Broadcaster.BroadcastListener;
 import com.hacked.controller.HackedService;
+import com.hacked.controller.HackedSessionService;
 import com.hacked.entity.Player;
 import com.hacked.entity.Role;
-import com.hacked.service.HackedSessionService;
+import com.vaadin.annotations.Push;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.Page;
-import com.vaadin.shared.Position;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -28,7 +28,8 @@ import com.vaadin.ui.renderers.HtmlRenderer;
  * @author pd06286
  */
 @SpringView(name = LobbyView.VIEW_NAME)
-public class LobbyView extends VerticalLayout implements View {
+@Push
+public class LobbyView extends VerticalLayout implements View, BroadcastListener {
 	/**
 	 *
 	 */
@@ -39,15 +40,25 @@ public class LobbyView extends VerticalLayout implements View {
 
 	public static final String VIEW_NAME = "lobby";
 
+	private Grid<Player> myGrid;
+
+	private Button startGame;
+
+	private Label playerReady;
+
+	private String gameId;
+
+	private Player player;
+
 	@PostConstruct
 	void init() {
-		Label playerReady = new Label("Warte auf Spieler");
-		String gameId = HackedSessionService.getGameId();
-		Player player = HackedSessionService.getPlayer();
-		Grid<Player> myGrid = generatePlayerTable(gameId, player);
+		playerReady = new Label("Warte auf Spieler");
+		gameId = HackedSessionService.getGameId();
+		player = HackedSessionService.getPlayer();
+		myGrid = generatePlayerTable(gameId, player);
 		reloadListe(myGrid, gameId);
 
-		Button startGame = new Button("Start Game");
+		startGame = new Button("Start Game");
 		startGame.setVisible(false);
 		startGame.setEnabled(false);
 		if (hackedService.isPlayerMasterOfGame(player.getId(), gameId)) {
@@ -58,46 +69,32 @@ public class LobbyView extends VerticalLayout implements View {
 		}
 		startGame.addClickListener(e -> {
 			reloadListe(myGrid, gameId);
-			startGame( player.getId(), gameId);
+			startGame(player.getId(), gameId);
 		});
-		
-		
+
 		Button readyButton = new Button("Bereit");
 		readyButton.addClickListener(e -> {
 			setPlayerReady(myGrid, player);
 			readyButton.setEnabled(false);
-			if (hackedService.playerOfGameReady(gameId)) {
-				startGame.setEnabled(true);
-				playerReady.setValue("Alle Spieler Bereit");
-			}
-		});
-
-		Button reButton = new Button("Aktualisiere");
-		reButton.addClickListener(e -> {
-			reloadListe(myGrid, gameId);
-
-			if (hackedService.playerOfGameReady(gameId)) {
-				startGame.setEnabled(true);
-				playerReady.setValue("Alle Spieler Bereit");
-			}
-			if (hackedService.isGameReadyRunning(gameId)) {
-				generateRoleMeldung(player.getId());
-				UI.getCurrent().getNavigator().navigateTo(RundeView.VIEW_NAME);
-			}
-
 		});
 
 		HorizontalLayout buttons = new HorizontalLayout();
-		buttons.addComponents(readyButton, reButton, startGame);
-
+		buttons.addComponents(readyButton, startGame);
 
 		addComponents(playerReady, myGrid, buttons);
+		Broadcaster.register(gameId, this);
+	}
+
+	@Override
+	public void detach() {
+		Broadcaster.unregister(gameId, this);
+		super.detach();
 	}
 
 	private Grid<Player> generatePlayerTable(String gameId, Player player) {
 		Grid<Player> myGrid = new Grid<>();
 		myGrid.setHeight("300px");
-		myGrid.setWidth("250px");		
+		myGrid.setWidth("250px");
 		myGrid.addColumn(p -> ladeReadyImage(p), new HtmlRenderer()).setCaption(" ").setMaximumWidth(50);
 		myGrid.addColumn(Player::getName).setCaption("Name");
 		myGrid.addColumn(p -> ladeMasterImage(p, gameId), new HtmlRenderer()).setCaption(" ").setMaximumWidth(50);
@@ -124,26 +121,17 @@ public class LobbyView extends VerticalLayout implements View {
 		}
 		generateRoleMeldung(playerId);
 		UI.getCurrent().getNavigator().navigateTo(RundeView.VIEW_NAME);
+		Broadcaster.broadcast(player.getGameId(), "Spiel Startet");
 	}
 
 	private void generateRoleMeldung(long playerId) {
-		String roleText = VaadinIcons.USER.getHtml() + " :: User";
 		Role role = hackedService.getPlayer(playerId).getRole();
-		if (Role.ADMIN == role) {
-			roleText = VaadinIcons.SERVER.getHtml() + " :: Admin";
-		} else if (Role.HACKER == role) {
-			roleText = VaadinIcons.BUG.getHtml() + " :: Hacker";
-		}
-		Notification notif = new Notification("Deine Rolle", Type.ASSISTIVE_NOTIFICATION);
-		notif.setHtmlContentAllowed(true);
-		notif.setPosition(Position.TOP_LEFT);
-		notif.setDelayMsec(4000);
-		notif.setDescription(roleText);
-		notif.show(Page.getCurrent());
+		hackedService.generateMeldung("Deine Rolle",  role.getIcon().getHtml() + " :: " + role.getTitel()).show(Page.getCurrent());
 	}
 
 	private void setPlayerReady(Grid<Player> myGrid, Player player) {
 		hackedService.setPlayerReady(player.getId());
+		Broadcaster.broadcast(player.getGameId(), "Player " + player.getName() + " ist Bereit");
 		myGrid.setItems(hackedService.getPlayerOfGame(player.getGameId()));
 	}
 
@@ -168,5 +156,22 @@ public class LobbyView extends VerticalLayout implements View {
 	@Override
 	public void enter(ViewChangeEvent event) {
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void receiveBroadcast(String message) {
+		getUI().access(() -> {
+			hackedService.generateMeldung("", message).show(Page.getCurrent());
+			reloadListe(myGrid, gameId);
+
+			if (hackedService.playerOfGameReady(gameId)) {
+				startGame.setEnabled(true);
+				playerReady.setValue("Alle Spieler Bereit");
+			}
+			if (hackedService.isGameReadyRunning(gameId)) {
+				generateRoleMeldung(player.getId());
+				UI.getCurrent().getNavigator().navigateTo(RundeView.VIEW_NAME);
+			}
+		});
 	}
 }

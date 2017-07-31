@@ -4,9 +4,10 @@ import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.hacked.service.SessionKonstanten;
+import com.hacked.controller.SessionKonstanten;
 import com.hacked.view.HelpView;
 import com.hacked.view.LoginView;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.server.Page;
@@ -20,6 +21,7 @@ import com.vaadin.ui.UI;
  */
 @Theme("valo")
 @SpringUI
+@Push
 public class HackedUI extends UI {
 	/**
 	 *

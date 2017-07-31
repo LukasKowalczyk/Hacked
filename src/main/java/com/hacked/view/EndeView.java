@@ -2,40 +2,41 @@ package com.hacked.view;
 
 import javax.annotation.PostConstruct;
 
+
+import com.hacked.controller.HackedSessionService;
+import com.hacked.entity.Role;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
-/**
- * @author pd06286
- */
-@SpringView(name = HelpView.VIEW_NAME)
-public class HelpView extends VerticalLayout implements View {
+@SpringView(name = EndeView.VIEW_NAME)
+public class EndeView extends VerticalLayout implements View {
 	/**
-	 *
-	 */
+	*
+	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final String VIEW_NAME = "help";
+	public static final String VIEW_NAME = "ende";
 
 	@PostConstruct
 	void init() {
-		Label hilfeText = new Label("Hilfe für Spieler!");
+		Role winner = HackedSessionService.getWinner();
+		String text = "Spiel ist zu ende!\n";
+		if(winner!=null){
+			 text += winner.name() + " haben gewonnen!";
+		}		
+		Label hilfeText = new Label(
+				text);
 		addComponent(hilfeText);
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.vaadin.navigator.View#enter(com.vaadin.navigator.ViewChangeListener.
-	 * ViewChangeEvent)
-	 */
 	@Override
 	public void enter(ViewChangeEvent event) {
 		// TODO Auto-generated method stub
+
 	}
+
 }

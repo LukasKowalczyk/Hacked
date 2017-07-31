@@ -12,8 +12,10 @@ import com.hacked.entity.Vote;
 import com.hacked.reposetory.GameReposetory;
 import com.hacked.reposetory.PlayerReposetory;
 import com.hacked.reposetory.VoteReposetory;
-import com.hacked.service.HackedSessionService;
+import com.vaadin.shared.Position;
 import com.vaadin.spring.annotation.SpringComponent;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 
 /**
  * @author pd06286
@@ -219,9 +221,6 @@ public class HackedService {
 
 	public Player getPlayerOfVot(String gameId) {
 		List<Vote> votes = voteReposetory.findAllByGameIdOrderByNomineeIdDesc(gameId);
-		for (Vote vote : votes) {
-			System.out.println(vote);
-		}
 		Round round = HackedSessionService.getRound();
 		if (round == null) {
 			round = new Round();
@@ -244,6 +243,26 @@ public class HackedService {
 	}
 
 	public void deleteVotes(String gameId) {
-		voteReposetory.deleteByGameId(gameId);		
+		voteReposetory.deleteByGameId(gameId);
+	}
+
+	public void gameOver(String gameId) {
+		gameReposetory.deleteById(gameId);
+		playerReposetory.deleteAllByGameId(gameId);
+	}
+
+	public Notification generateMeldung(String titel, String text) {
+		Notification notif = new Notification(titel, Type.ASSISTIVE_NOTIFICATION);
+		notif.setHtmlContentAllowed(true);
+		notif.setPosition(Position.TOP_LEFT);
+		notif.setDescription(text);
+		return notif;
+	}
+	public Notification generateMeldung(String titel, String text, Position position) {
+		Notification notif = new Notification(titel, Type.ASSISTIVE_NOTIFICATION);
+		notif.setHtmlContentAllowed(true);
+		notif.setPosition(position);
+		notif.setDescription(text);
+		return notif;
 	}
 }

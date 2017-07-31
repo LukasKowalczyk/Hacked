@@ -1,6 +1,9 @@
 package com.hacked.reposetory;
 
 import java.util.List;
+
+import javax.transaction.Transactional;
+
 import org.springframework.data.repository.CrudRepository;
 
 import com.hacked.entity.Player;
@@ -25,5 +28,8 @@ public interface PlayerReposetory extends CrudRepository<Player, Long> {
 	long countByGameIdAndDeaktivatet(String gameId, boolean deaktivated);
 
 	List<Player> findByGameIdAndDeaktivatetAndHeacked(String gameId, boolean deaktiviert, boolean hacked);
+
+	@Transactional
+	void deleteAllByGameId(String gameId);
 
 }

@@ -14,9 +14,9 @@ import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
 /**
@@ -24,7 +24,7 @@ import com.vaadin.ui.themes.ValoTheme;
  */
 @SpringView(name = LoginView.VIEW_NAME)
 @UIScope
-public class LoginView extends VerticalLayout implements View {
+public class LoginView extends FormLayout implements View {
 	/**
 	 *
 	 */

@@ -4,6 +4,8 @@ import java.util.List;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.hacked.entity.Game;
 import com.hacked.entity.Player;
 import com.hacked.entity.Role;
@@ -17,11 +19,22 @@ import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 
+import net.glxn.qrgen.core.image.ImageType;
+import net.glxn.qrgen.javase.QRCode;
+
 /**
  * @author pd06286
  */
 @SpringComponent
 public class HackedService {
+	@Value("${server.address}")
+	private String serverAddress;
+	
+	@Value("${server.port}")
+	private String serverPort;
+
+	private static final long MIN_PLAYER_COUNT = 3;
+
 	@Autowired
 	private PlayerReposetory playerReposetory;
 
@@ -46,6 +59,11 @@ public class HackedService {
 			gameReposetory.save(game);
 		}
 		return id;
+	}
+
+	public byte[] getQR(String gameId) {
+		return QRCode.from("http://" + serverAddress + ":" + serverPort + "/?gameId=" + gameId).withCharset("UTF-8")
+				.withSize(250, 250).to(ImageType.PNG).stream().toByteArray();
 	}
 
 	public boolean isPlayerMasterOfGame(long playerId, String gameId) {
@@ -88,6 +106,10 @@ public class HackedService {
 	 */
 	public List<Game> getAllGames() {
 		return gameReposetory.findAll();
+	}
+
+	public boolean isMinPlayerCountOfGame(String gameId) {
+		return playerReposetory.countByGameId(gameId) >= MIN_PLAYER_COUNT;
 	}
 
 	/**
@@ -258,6 +280,7 @@ public class HackedService {
 		notif.setDescription(text);
 		return notif;
 	}
+
 	public Notification generateMeldung(String titel, String text, Position position) {
 		Notification notif = new Notification(titel, Type.ASSISTIVE_NOTIFICATION);
 		notif.setHtmlContentAllowed(true);

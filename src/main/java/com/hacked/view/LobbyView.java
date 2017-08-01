@@ -46,48 +46,44 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 
 	private Label playerReady;
 
-	private String gameId;
+	private Button readyButton;
 
 	private Player player;
 
 	@PostConstruct
 	void init() {
-		playerReady = new Label("Warte auf Spieler");
-		gameId = HackedSessionService.getGameId();
 		player = HackedSessionService.getPlayer();
-		myGrid = generatePlayerTable(gameId, player);
-		reloadListe(myGrid, gameId);
+		String gameId = player.getGameId();
 
+		playerReady = new Label("Warte auf Spieler");
+		if (!hackedService.isMinPlayerCountOfGame(gameId)) {
+			playerReady.setValue("Zu wenig Spieler (Min. 3)");
+		}
+		
+		myGrid = generatePlayerTable(gameId, player);
+		
 		startGame = new Button("Start Game");
-		startGame.setVisible(false);
-		startGame.setEnabled(false);
-		if (hackedService.isPlayerMasterOfGame(player.getId(), gameId)) {
-			startGame.setVisible(true);
-		}
-		if (hackedService.playerOfGameReady(gameId)) {
-			startGame.setEnabled(true);
-		}
+		startGame.setVisible(hackedService.isPlayerMasterOfGame(player.getId(), gameId));
+		startGame.setEnabled(hackedService.playerOfGameReady(gameId));
 		startGame.addClickListener(e -> {
 			reloadListe(myGrid, gameId);
 			startGame(player.getId(), gameId);
 		});
 
-		Button readyButton = new Button("Bereit");
+		readyButton = new Button("Bereit");
+		readyButton.setEnabled(hackedService.isMinPlayerCountOfGame(gameId));
+		readyButton.setDisableOnClick(true);
 		readyButton.addClickListener(e -> {
 			setPlayerReady(myGrid, player);
-			readyButton.setEnabled(false);
 		});
 
-		HorizontalLayout buttons = new HorizontalLayout();
-		buttons.addComponents(readyButton, startGame);
-
-		addComponents(playerReady, myGrid, buttons);
+		addComponents(playerReady, myGrid, new HorizontalLayout(readyButton, startGame));
 		Broadcaster.register(gameId, this);
 	}
 
 	@Override
 	public void detach() {
-		Broadcaster.unregister(gameId, this);
+		Broadcaster.unregister(player.getGameId(), this);
 		super.detach();
 	}
 
@@ -126,7 +122,8 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 
 	private void generateRoleMeldung(long playerId) {
 		Role role = hackedService.getPlayer(playerId).getRole();
-		hackedService.generateMeldung("Deine Rolle",  role.getIcon().getHtml() + " :: " + role.getTitel()).show(Page.getCurrent());
+		hackedService.generateMeldung("Deine Rolle", role.getIcon().getHtml() + " :: " + role.getTitel())
+				.show(Page.getCurrent());
 	}
 
 	private void setPlayerReady(Grid<Player> myGrid, Player player) {
@@ -155,23 +152,28 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 	 */
 	@Override
 	public void enter(ViewChangeEvent event) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 
 	@Override
 	public void receiveBroadcast(String message) {
+		System.out.println(message);
 		getUI().access(() -> {
-			hackedService.generateMeldung("", message).show(Page.getCurrent());
+			String gameId = player.getGameId();
+			readyButton.setEnabled(hackedService.isMinPlayerCountOfGame(gameId));
+			// hackedService.generateMeldung("",
+			// message).show(Page.getCurrent());
 			reloadListe(myGrid, gameId);
-
+			if (!hackedService.isMinPlayerCountOfGame(gameId)) {
+				playerReady.setValue("Zu wenig Spieler (Min. 3)");
+			} else {
+				playerReady.setValue("Warte auf Spieler");
+			}
 			if (hackedService.playerOfGameReady(gameId)) {
 				startGame.setEnabled(true);
 				playerReady.setValue("Alle Spieler Bereit");
 			}
-			if (hackedService.isGameReadyRunning(gameId)) {
-				generateRoleMeldung(player.getId());
-				UI.getCurrent().getNavigator().navigateTo(RundeView.VIEW_NAME);
-			}
+			startGame(player.getId(), gameId);
 		});
 	}
 }

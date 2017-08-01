@@ -5,6 +5,7 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hacked.controller.SessionKonstanten;
+import com.hacked.view.AddGameView;
 import com.hacked.view.HelpView;
 import com.hacked.view.LoginView;
 import com.vaadin.annotations.Push;
@@ -22,7 +23,7 @@ import com.vaadin.ui.UI;
 @Theme("valo")
 @SpringUI
 @Push
-public class HackedUI extends UI {
+public class MainUI extends UI {
 	/**
 	 *
 	 */
@@ -56,6 +57,8 @@ public class HackedUI extends UI {
 		UI.getCurrent().getSession().setAttribute(SessionKonstanten.GAME_ID, gameIdText);
 		if (url.endsWith("#!" + HelpView.VIEW_NAME)) {
 			getUI().getNavigator().navigateTo(HelpView.VIEW_NAME);
+		} else if (url.endsWith("#!" + AddGameView.VIEW_NAME)) {
+			getUI().getNavigator().navigateTo(AddGameView.VIEW_NAME);
 		} else {
 			getUI().getNavigator().navigateTo(LoginView.VIEW_NAME);
 		}

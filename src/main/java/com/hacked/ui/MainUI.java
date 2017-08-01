@@ -48,12 +48,14 @@ public class MainUI extends UI {
 
 		URI location = Page.getCurrent().getLocation();
 		String url = location.toString();
+		
 		if (url.contains("?" + SessionKonstanten.GAME_ID + "=") && !url.contains("#")) {
 			String gamIdParameter = location.getQuery();
 			gameIdText = gamIdParameter.substring(gamIdParameter.indexOf("=") + 1);
 			url = url.substring(0, url.indexOf("?"));
 			Page.getCurrent().replaceState(URI.create(url));
 		}
+		
 		UI.getCurrent().getSession().setAttribute(SessionKonstanten.GAME_ID, gameIdText);
 		if (url.endsWith("#!" + HelpView.VIEW_NAME)) {
 			getUI().getNavigator().navigateTo(HelpView.VIEW_NAME);

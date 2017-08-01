@@ -11,12 +11,6 @@
 	<name>Hacked</name>
 	<description>Hacked</description>
 
-	<resources>
-		<resource>
-			<directory>src/main/webapp</directory>
-		</resource>
-	</resources>
-
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>

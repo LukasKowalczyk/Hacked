@@ -18,11 +18,6 @@ import net.glxn.qrgen.javase.QRCode;
  */
 @RestController
 public class GameController {
-	@Value("${server.address}")
-	private String serverAddress;
-	@Value("${server.port}")
-	private String serverPort;
-
 	@Autowired
 	private HackedService hackedService;
 
@@ -46,11 +41,5 @@ public class GameController {
 		return hackedService.getAllVotes();
 	}
 
-	@ResponseBody
-	@RequestMapping(value = "/getQR", produces = MediaType.IMAGE_PNG_VALUE)
-	public byte[] getQR(String gameId) {
-		return QRCode.from("http://"+serverAddress+":" + serverPort + "/?gameId=" + gameId).withCharset("UTF-8").withSize(250, 250)
-				.to(ImageType.PNG).stream().toByteArray();
-	}
 
 }

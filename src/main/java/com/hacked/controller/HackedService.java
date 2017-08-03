@@ -27,10 +27,10 @@ import net.glxn.qrgen.javase.QRCode;
  */
 @SpringComponent
 public class HackedService {
-	@Value("${server.address}")
+	@Value("${qrcode.server.address}")
 	private String serverAddress;
 	
-	@Value("${server.port}")
+	@Value("${qrcode.server.port}")
 	private String serverPort;
 
 	private static final long MIN_PLAYER_COUNT = 3;

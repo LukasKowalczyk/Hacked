@@ -105,7 +105,9 @@ public class RundeView extends VerticalLayout implements View, BroadcastListener
 		Object[] array = myGrid.getSelectedItems().toArray();
 		if (array.length > 0) {
 			Player hackedPlayer = (Player) array[0];
-			return hackedPlayer;
+			if (hackedPlayer.getId() != player.getId()) {
+				return hackedPlayer;
+			}
 		}
 		return null;
 	}

@@ -29,7 +29,7 @@ import net.glxn.qrgen.javase.QRCode;
 public class HackedService {
 	@Value("${qrcode.server.address}")
 	private String serverAddress;
-	
+
 	@Value("${qrcode.server.port}")
 	private String serverPort;
 
@@ -69,6 +69,10 @@ public class HackedService {
 	public boolean isPlayerMasterOfGame(long playerId, String gameId) {
 		Game game = gameReposetory.findById(gameId).get();
 		return game.getMasterId() == playerId;
+	}
+
+	public boolean isPlayerInGame(String playerName, String gameId) {
+		return playerReposetory.existsByGameIdAndName(gameId, playerName);
 	}
 
 	public String generateGame() {

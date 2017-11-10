@@ -13,6 +13,8 @@ import com.hacked.entity.Role;
  * @author pd06286
  */
 public interface PlayerReposetory extends CrudRepository<Player, Long> {
+	boolean existsByGameIdAndName(String gameId, String name);
+
 	List<Player> findAll();
 
 	List<Player> findByGameId(String gameId);
@@ -24,7 +26,7 @@ public interface PlayerReposetory extends CrudRepository<Player, Long> {
 	long countByGameId(String gameId);
 
 	long countByGameIdAndReady(String gameId, boolean ready);
-	
+
 	long countByGameIdAndDeaktivatet(String gameId, boolean deaktivated);
 
 	List<Player> findByGameIdAndDeaktivatetAndHeacked(String gameId, boolean deaktiviert, boolean hacked);

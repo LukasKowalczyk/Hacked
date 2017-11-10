@@ -59,9 +59,10 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 		if (!hackedService.isMinPlayerCountOfGame(gameId)) {
 			playerReady.setValue("Zu wenig Spieler (Min. 3)");
 		}
-		
+
 		myGrid = generatePlayerTable(gameId, player);
-		
+		reloadListe(myGrid, gameId);
+
 		startGame = new Button("Start Game");
 		startGame.setVisible(hackedService.isPlayerMasterOfGame(player.getId(), gameId));
 		startGame.setEnabled(hackedService.playerOfGameReady(gameId));
@@ -76,7 +77,7 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 		readyButton.addClickListener(e -> {
 			setPlayerReady(myGrid, player);
 		});
-
+		
 		addComponents(playerReady, myGrid, new HorizontalLayout(readyButton, startGame));
 		Broadcaster.register(gameId, this);
 	}
@@ -161,8 +162,6 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 		getUI().access(() -> {
 			String gameId = player.getGameId();
 			readyButton.setEnabled(hackedService.isMinPlayerCountOfGame(gameId));
-			// hackedService.generateMeldung("",
-			// message).show(Page.getCurrent());
 			reloadListe(myGrid, gameId);
 			if (!hackedService.isMinPlayerCountOfGame(gameId)) {
 				playerReady.setValue("Zu wenig Spieler (Min. 3)");

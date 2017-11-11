@@ -156,7 +156,7 @@ public class RundeView extends VerticalLayout implements View, BroadcastListener
 
 	private List<Player> getPlayer() {
 		String gameId = HackedSessionService.getGameId();
-		return hackedService.getAktivPlayerOfGame(gameId);
+		return hackedService.getOtherAktivPlayerOfGame(gameId, player.getId());
 	}
 
 	@Override
@@ -168,7 +168,7 @@ public class RundeView extends VerticalLayout implements View, BroadcastListener
 	@Override
 	public void receiveBroadcast(String message) {
 		getUI().access(() -> {
-			hackedService.generateMeldung("", message).show(Page.getCurrent());
+			//hackedService.generateMeldung("", message).show(Page.getCurrent());
 			if (isRundeEnde(gameId)) {
 				scannenButton.setEnabled(true);
 				hackButton.setEnabled(true);

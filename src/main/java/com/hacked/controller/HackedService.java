@@ -185,8 +185,8 @@ public class HackedService {
 		return gameReposetory.findById(gameId).get().isRunning();
 	}
 
-	public List<Player> getAktivPlayerOfGame(String gameId) {
-		return playerReposetory.findByGameIdAndDeaktivatet(gameId, false);
+	public List<Player> getOtherAktivPlayerOfGame(String gameId, long playerId) {
+		return playerReposetory.findByGameIdAndDeaktivatetAndIdNot(gameId, false, playerId);
 	}
 
 	public List<Player> getOnlyDeaktivatedPlayerOfGame(String gameId) {

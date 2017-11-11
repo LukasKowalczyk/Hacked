@@ -20,8 +20,8 @@ public interface PlayerReposetory extends CrudRepository<Player, Long> {
 	List<Player> findByGameId(String gameId);
 
 	List<Player> findByGameIdAndRole(String gameId, Role role);
-
-	List<Player> findByGameIdAndDeaktivatet(String gameId, boolean deaktivated);
+	
+	List<Player> findByGameIdAndDeaktivatetAndIdNot(String gameId, boolean deaktivated, long id);
 
 	long countByGameId(String gameId);
 

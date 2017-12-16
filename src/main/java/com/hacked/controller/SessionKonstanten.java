@@ -1,8 +1,5 @@
 package com.hacked.controller;
 
-/**
- * @author pd06286
- */
 public interface SessionKonstanten {
 	public static final String GAME_ID = "gameId";
 

@@ -25,7 +25,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 /**
- * @author pd06286
+ * @author  
  */
 @SpringView(name = LobbyView.VIEW_NAME)
 @Push

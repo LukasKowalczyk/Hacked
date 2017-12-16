@@ -4,7 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 /**
- * @author pd06286
+ * @author  
  */
 @Entity
 public class Game {

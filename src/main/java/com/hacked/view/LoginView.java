@@ -22,7 +22,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 
 /**
- * @author pd06286
+ * @author  
  */
 @SpringView(name = LoginView.VIEW_NAME)
 @UIScope

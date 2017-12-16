@@ -6,7 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 import com.hacked.entity.Game;
 
 /**
- * @author pd06286
+ * @author  
  */
 public interface GameReposetory extends CrudRepository<Game, String> {
     List<Game> findAll();

@@ -3,7 +3,7 @@ package com.hacked.entity;
 import com.vaadin.icons.VaadinIcons;
 
 /**
- * @author pd06286
+ * @author  
  */
 public enum Role {
 	UNKNOWN(VaadinIcons.QUESTION_CIRCLE_O, "Unkown"), HACKER(VaadinIcons.BUG_O, "Hacker"), USER(VaadinIcons.USER,

@@ -9,7 +9,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 /**
- * @author pd06286
+ * @author  
  */
 @SpringView(name = HelpView.VIEW_NAME)
 public class HelpView extends VerticalLayout implements View {

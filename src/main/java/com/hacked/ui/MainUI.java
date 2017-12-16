@@ -18,7 +18,7 @@ import com.vaadin.spring.navigator.SpringViewProvider;
 import com.vaadin.ui.UI;
 
 /**
- * @author pd06286
+ * @author  
  */
 @Theme("valo")
 @SpringUI

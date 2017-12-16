@@ -9,7 +9,7 @@ import org.springframework.data.repository.CrudRepository;
 import com.hacked.entity.Vote;
 
 /**
- * @author pd06286
+ * @author  
  */
 public interface VoteReposetory extends CrudRepository<Vote, Long> {
 	List<Vote> findAll();

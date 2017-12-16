@@ -20,7 +20,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 /**
- * @author pd06286
+ * @author  
  */
 @SpringView(name = ShareGameView.VIEW_NAME)
 public class ShareGameView extends VerticalLayout implements View {

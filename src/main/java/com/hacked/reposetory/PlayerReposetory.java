@@ -10,7 +10,7 @@ import com.hacked.entity.Player;
 import com.hacked.entity.Role;
 
 /**
- * @author pd06286
+ * @author  
  */
 public interface PlayerReposetory extends CrudRepository<Player, Long> {
 	boolean existsByGameIdAndName(String gameId, String name);

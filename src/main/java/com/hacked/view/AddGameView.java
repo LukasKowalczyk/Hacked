@@ -11,7 +11,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 /**
- * @author pd06286
+ * @author  
  */
 @SpringView(name = AddGameView.VIEW_NAME)
 public class AddGameView extends VerticalLayout implements View {

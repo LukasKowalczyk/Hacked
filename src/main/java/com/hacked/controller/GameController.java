@@ -8,9 +8,6 @@ import com.hacked.entity.Game;
 import com.hacked.entity.Player;
 import com.hacked.entity.Vote;
 
-/**
- * @author pd06286
- */
 @RestController
 public class GameController {
 	@Autowired

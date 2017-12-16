@@ -30,7 +30,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 /**
- * @author pd06286
+ * @author  
  */
 @SpringView(name = RundeView.VIEW_NAME)
 @Push

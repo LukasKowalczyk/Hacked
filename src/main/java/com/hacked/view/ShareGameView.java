@@ -7,7 +7,7 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.hacked.controller.HackedService;
+import com.hacked.controller.GameService;
 import com.hacked.controller.HackedSessionService;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
@@ -32,11 +32,12 @@ public class ShareGameView extends VerticalLayout implements View {
 	public static final String VIEW_NAME = "shareGame";
 
 	@Autowired
-	private HackedService hackedService;
+	private GameService gameService;
+	
 
 	@PostConstruct
 	void init() {
-		String id = hackedService.generateGame();
+		String id = gameService.generateGame();
 		Label gameId = new Label("GameId : " + id);
 		Image qrCode = new Image();
 		qrCode.setSource(new StreamResource(new StreamResource.StreamSource() {
@@ -47,7 +48,7 @@ public class ShareGameView extends VerticalLayout implements View {
 
 			@Override
 			  public InputStream getStream() {
-			    return new ByteArrayInputStream(hackedService.getQR(id));
+			    return new ByteArrayInputStream(gameService.getQR(id));
 			    
 			  }
 			}, ""));

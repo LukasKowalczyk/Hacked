@@ -2,16 +2,11 @@ package com.hacked.controller;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.hacked.entity.Game;
 import com.hacked.entity.Player;
 import com.hacked.entity.Vote;
-import net.glxn.qrgen.core.image.ImageType;
-import net.glxn.qrgen.javase.QRCode;
 
 /**
  * @author pd06286
@@ -19,27 +14,32 @@ import net.glxn.qrgen.javase.QRCode;
 @RestController
 public class GameController {
 	@Autowired
-	private HackedService hackedService;
+	private GameService gameService;
+	
+	@Autowired
+	private PlayerService playerService;
+	
+	@Autowired
+	private VoteService voteService;
 
 	@RequestMapping("/generateGame")
 	public String greeting() {
-		return hackedService.generateGame();
+		return gameService.generateGame();
 	}
 
 	@RequestMapping("/allGames")
 	public List<Game> games() {
-		return hackedService.getAllGames();
+		return gameService.getAllGames();
 	}
 
 	@RequestMapping("/allPlayer")
 	public List<Player> player() {
-		return hackedService.getAllPlayer();
+		return playerService.getAllPlayer();
 	}
 
 	@RequestMapping("/allVotes")
 	public List<Vote> votes() {
-		return hackedService.getAllVotes();
+		return voteService.getAllVotes();
 	}
-
 
 }

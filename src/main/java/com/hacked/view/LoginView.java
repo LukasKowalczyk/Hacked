@@ -5,8 +5,8 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hacked.controller.Broadcaster;
-import com.hacked.controller.HackedService;
 import com.hacked.controller.HackedSessionService;
+import com.hacked.controller.PlayerService;
 import com.hacked.controller.SessionKonstanten;
 import com.hacked.entity.Player;
 import com.vaadin.navigator.View;
@@ -35,7 +35,7 @@ public class LoginView extends FormLayout implements View {
 	private TextField textFieldplayerName ;
 	
 	@Autowired
-	private HackedService hackedService;
+	private PlayerService playerService;
 
 	public static final String VIEW_NAME = "login";
 
@@ -59,13 +59,13 @@ public class LoginView extends FormLayout implements View {
 	 * @param textFieldplayerName
 	 */
 	private void addPlayerToGame(String gameId, String playerName) {
-		if(hackedService.isPlayerInGame(playerName, gameId)){
+		if(playerService.isPlayerInGame(playerName, gameId)){
 			textFieldplayerName.setComponentError(new UserError("Spieler exestiert schon!"));
 			return;
 		}
 		
-		long id = hackedService.addPlayerToGame(playerName, gameId);
-		Player player = hackedService.getPlayer(id);
+		long id = playerService.addPlayerToGame(playerName, gameId);
+		Player player = playerService.getPlayer(id);
 		HackedSessionService.setGameId(gameId);
 		HackedSessionService.setPlayerId(player.getId());
 		HackedSessionService.setPlayer(player);

@@ -17,10 +17,12 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.Page;
 import com.vaadin.spring.annotation.SpringView;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -64,12 +66,15 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
         String gameId = player.getGameId();
 
         playerReady = new Label("Warte auf Spieler");
+        playerReady.setWidth("100%");
         if (!playerService.isMinPlayerCountOfGame(gameId)) {
             playerReady.setValue("Zu wenig Spieler (Min. 3)");
         }
 
         myGrid = generatePlayerTable(gameId, player);
         reloadListe(myGrid, gameId);
+        myGrid.setWidth("100%");
+        myGrid.setHeightByRows(5);
 
         startGame = new Button("Start Game");
         startGame.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
@@ -88,8 +93,22 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
             setPlayerReady(myGrid, player);
         });
 
-        addComponents(playerReady, myGrid, new HorizontalLayout(readyButton, startGame));
+        HorizontalLayout buttonBar = new HorizontalLayout(readyButton, startGame);
+        buttonBar.setWidth("100%");
+        buttonBar.setComponentAlignment(readyButton, Alignment.MIDDLE_CENTER);
+        buttonBar.setComponentAlignment(startGame, Alignment.MIDDLE_CENTER);
+        buttonBar.setSpacing(true);
+        buttonBar.setMargin(true);
+
+        VerticalLayout table = new VerticalLayout(playerReady, myGrid, buttonBar);
+        table.setMargin(true);
+
+        Panel containerTable = new Panel();
+        containerTable.setContent(table);
+        addComponents(containerTable);
+
         Broadcaster.register(gameId, this);
+        this.setSizeFull();
     }
 
     @Override

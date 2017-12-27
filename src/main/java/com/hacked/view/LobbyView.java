@@ -1,5 +1,7 @@
 package com.hacked.view;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.github.appreciated.material.MaterialTheme;
@@ -10,19 +12,23 @@ import com.hacked.controller.HackedSessionService;
 import com.hacked.controller.PlayerService;
 import com.hacked.controller.UtilityService;
 import com.hacked.entity.Player;
-import com.hacked.entity.Role;
+import com.jarektoro.responsivelayout.ResponsiveColumn;
+import com.jarektoro.responsivelayout.ResponsiveLayout;
+import com.jarektoro.responsivelayout.ResponsiveRow;
+import com.jarektoro.responsivelayout.ResponsiveRow.SpacingSize;
 import com.vaadin.annotations.Push;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
-import com.vaadin.server.Page;
+import com.vaadin.server.StreamResource;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -51,7 +57,7 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 
     private Grid<Player> myGrid;
 
-    private Button startGame;
+    private Button showQrCode;
 
     private Label playerReady;
 
@@ -61,28 +67,52 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
 
     @PostConstruct
     void init() {
-        this.setSizeUndefined();
+        setSizeFull();
+        ResponsiveLayout responsiveLayout = new ResponsiveLayout();
+        responsiveLayout.setSizeFull();
+        addComponent(responsiveLayout);
+        ResponsiveRow rootRow = responsiveLayout.addRow();
+        rootRow.setHeight("100%");
+        rootRow.setHorizontalSpacing(SpacingSize.NORMAL, true);
+        rootRow.setVerticalSpacing(SpacingSize.SMALL, false);
+        rootRow.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+
         player = HackedSessionService.getPlayer();
         String gameId = player.getGameId();
 
         playerReady = new Label("Warte auf Spieler");
-        playerReady.setWidth("100%");
         if (!playerService.isMinPlayerCountOfGame(gameId)) {
             playerReady.setValue("Zu wenig Spieler (Min. 3)");
         }
+        ResponsiveColumn gameIdInput = new ResponsiveColumn();
+        gameIdInput.setComponent(playerReady);
+        rootRow.addColumn(gameIdInput);
 
         myGrid = generatePlayerTable(gameId, player);
         reloadListe(myGrid, gameId);
-        myGrid.setWidth("100%");
-        myGrid.setHeightByRows(5);
+        ResponsiveColumn gridOutput = new ResponsiveColumn();
+        gridOutput.setComponent(myGrid);
+        rootRow.addColumn(gridOutput);
 
-        startGame = new Button("Start Game");
-        startGame.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
-        startGame.setVisible(playerService.isPlayerMasterOfGame(player.getId(), gameId));
-        startGame.setEnabled(playerService.playerOfGameReady(gameId));
-        startGame.addClickListener(e -> {
-            reloadListe(myGrid, gameId);
-            startGame(player.getId(), gameId);
+        showQrCode = new Button("QR-Code");
+        showQrCode.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
+        showQrCode.setVisible(playerService.isPlayerMasterOfGame(player.getId(), gameId));
+        // showQrCode.setEnabled(playerService.playerOfGameReady(gameId));
+        showQrCode.addClickListener(e -> {
+            Image qrCode = new Image();
+            qrCode.setSource(new StreamResource(new StreamResource.StreamSource() {
+                /**
+                *
+                */
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public InputStream getStream() {
+                    return new ByteArrayInputStream(gameService.getQR(gameId));
+
+                }
+            }, ""));
+            utilityService.generateMeldung(gameId, qrCode);
         });
 
         readyButton = new Button("Bereit");
@@ -91,24 +121,19 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
         readyButton.setDisableOnClick(true);
         readyButton.addClickListener(e -> {
             setPlayerReady(myGrid, player);
+            readyButton.setEnabled(false);
         });
 
-        HorizontalLayout buttonBar = new HorizontalLayout(readyButton, startGame);
-        buttonBar.setWidth("100%");
+        HorizontalLayout buttonBar = new HorizontalLayout(readyButton, showQrCode);
         buttonBar.setComponentAlignment(readyButton, Alignment.MIDDLE_CENTER);
-        buttonBar.setComponentAlignment(startGame, Alignment.MIDDLE_CENTER);
+        buttonBar.setComponentAlignment(showQrCode, Alignment.MIDDLE_CENTER);
         buttonBar.setSpacing(true);
         buttonBar.setMargin(true);
-
-        VerticalLayout table = new VerticalLayout(playerReady, myGrid, buttonBar);
-        table.setMargin(true);
-
-        Panel containerTable = new Panel();
-        containerTable.setContent(table);
-        addComponents(containerTable);
+        ResponsiveColumn readyButtonInput = new ResponsiveColumn();
+        readyButtonInput.setComponent(buttonBar);
+        rootRow.addColumn(readyButtonInput);
 
         Broadcaster.register(gameId, this);
-        this.setSizeFull();
     }
 
     @Override
@@ -118,22 +143,16 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
     }
 
     private Grid<Player> generatePlayerTable(String gameId, Player player) {
-
         Grid<Player> myGrid = new Grid<>();
         myGrid.removeHeaderRow(0);
-        myGrid.setStyleName(MaterialTheme.TABLE_BORDERLESS);
-        myGrid.addColumn(p -> ladeReadyImage(p), new HtmlRenderer()).setMaximumWidth(50);
-        myGrid.addColumn(Player::getName);
-        myGrid.addColumn(p -> ladeMasterImage(p, gameId), new HtmlRenderer()).setMaximumWidth(50);
-        myGrid.select(player);
+        myGrid.setResponsive(true);
+        myGrid.setSelectionMode(SelectionMode.NONE);
+        myGrid.setHeightByRows(5);
+        myGrid.setWidth("100%");
+        myGrid.setStyleName(MaterialTheme.TABLE_COMPACT);
+        myGrid.addColumn(p -> ladeReadyImage(p), new HtmlRenderer()).setExpandRatio(0);
+        myGrid.addColumn(Player::getName).setExpandRatio(2);
         return myGrid;
-    }
-
-    private String ladeMasterImage(Player p, String gameId) {
-        if (playerService.isPlayerMasterOfGame(p.getId(), gameId)) {
-            return VaadinIcons.KEY.getHtml();
-        }
-        return "";
     }
 
     /**
@@ -152,9 +171,11 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
     }
 
     private void generateRoleMeldung(long playerId) {
-        Role role = playerService.getPlayer(playerId).getRole();
-        utilityService.generateMeldung("Deine Rolle", role.getIcon().getHtml() + " :: " + role.getTitel())
-            .show(Page.getCurrent());
+        Player player = playerService.getPlayer(playerId);
+
+        String text = "Du bist ein " + player.getRole().getTitel() + "\n\n" + "deine aufgabe ist es....";
+
+        utilityService.generateInfoMeldung("Hallo " + player.getName(), text);
     }
 
     private void setPlayerReady(Grid<Player> myGrid, Player player) {
@@ -195,7 +216,7 @@ public class LobbyView extends VerticalLayout implements View, BroadcastListener
                 playerReady.setValue("Warte auf Spieler");
             }
             if (playerService.playerOfGameReady(gameId)) {
-                startGame.setEnabled(true);
+                showQrCode.setEnabled(true);
                 playerReady.setValue("Alle Spieler Bereit");
             }
             startGame(player.getId(), gameId);

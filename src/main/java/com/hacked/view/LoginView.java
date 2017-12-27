@@ -8,16 +8,21 @@ import com.hacked.controller.HackedSessionService;
 import com.hacked.controller.PlayerService;
 import com.hacked.controller.SessionKonstanten;
 import com.hacked.entity.Player;
+import com.jarektoro.responsivelayout.ResponsiveColumn;
+import com.jarektoro.responsivelayout.ResponsiveLayout;
+import com.jarektoro.responsivelayout.ResponsiveRow;
+import com.jarektoro.responsivelayout.ResponsiveRow.SpacingSize;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.UserError;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.spring.annotation.UIScope;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import de.steinwedel.messagebox.MessageBox;
 
 /**
  * @author
@@ -44,23 +49,54 @@ public class LoginView extends VerticalLayout implements View {
     @PostConstruct
     void init() {
 
+        setSizeFull();
+        ResponsiveLayout responsiveLayout = new ResponsiveLayout();
+        responsiveLayout.setSizeFull();
+        // textFieldgameId, textFieldplayerName, buttonAnmelden
+        addComponent(responsiveLayout);
+        ResponsiveRow rootRow = responsiveLayout.addRow();
+        rootRow.setHeight("100%");
+
+        rootRow.setHorizontalSpacing(SpacingSize.NORMAL, true);
+        rootRow.setVerticalSpacing(SpacingSize.SMALL, false);
+        rootRow.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+
+        MessageBox.create().withCaption("Willkommen").withMessage(
+            "Du wurdes eingeladen an einem Spiel \"hacked\" teilzunehmen.\nMelde dich mit einer Spiel-ID und deinem Nicknamen an!")
+            .withOkButton().open();
+
+        // MessageBox.createInfo().withCaption("Custom button captions").withMessage("Button captions replaced!")
+        // .withYesButton(ButtonOption.caption("Yea")).withNoButton(ButtonOption.caption("Nay")).open();
+        //
+        // MessageBox.createQuestion().withCaption("Example 6").withMessage("Do you really want to continue?")
+        // .withYesButton(() -> {
+        // System.out.println("Yes button was pressed.");
+        // }).withNoButton(() -> {
+        // System.out.println("No button was pressed.");
+        // }).open();
+        //
+        // MessageBox.createInfo().withCaption("Example 1").withMessage("Hello World!").withOkButton().open();
         String gameIdText = (String) UI.getCurrent().getSession().getAttribute(SessionKonstanten.GAME_ID);
+
         textFieldgameId = new TextField("Spiel-ID");
         textFieldgameId.setSizeFull();
         textFieldgameId.setValue(gameIdText);
+        ResponsiveColumn gameIdInput = new ResponsiveColumn();
+        gameIdInput.setComponent(textFieldgameId);
+        rootRow.addColumn(gameIdInput);
 
         textFieldplayerName = new TextField("Spielername");
         textFieldplayerName.setSizeFull();
-        buttonAnmelden = new Button("Anmelden");
+        ResponsiveColumn playerNameInput = new ResponsiveColumn();
+        playerNameInput.setComponent(textFieldplayerName);
+        rootRow.addColumn(playerNameInput);
 
+        buttonAnmelden = new Button("Anmelden");
         buttonAnmelden.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
         buttonAnmelden.addClickListener(e -> addPlayerToGame(textFieldgameId.getValue(), textFieldplayerName.getValue()));
-        Panel container = new Panel();
-        VerticalLayout content = new VerticalLayout(textFieldgameId, textFieldplayerName, buttonAnmelden);
-        content.setSpacing(true);
-        content.setMargin(true);
-        container.setContent(content);
-        addComponents(container);
+        ResponsiveColumn anmeldenInput = new ResponsiveColumn();
+        anmeldenInput.setComponent(buttonAnmelden);
+        rootRow.addColumn(anmeldenInput);
 
     }
 
@@ -89,7 +125,5 @@ public class LoginView extends VerticalLayout implements View {
      */
     @Override
     public void enter(ViewChangeEvent event) {
-        // TODO Auto-generated method stub
-
     }
 }

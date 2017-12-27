@@ -36,6 +36,7 @@ public class MainUI extends UI {
      */
     @Override
     protected void init(VaadinRequest request) {
+        setSizeFull();
         // wenn ?gameId=... im path ist muss das in die session mit rein
         String gameIdText = "";
         setResponsive(true);
